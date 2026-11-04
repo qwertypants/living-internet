@@ -39,3 +39,11 @@ The web viewer is runnable using the commands in `README.md`. No services or API
 
 - Browser `webkitdirectory` is Chromium-specific, and packed Git databases make the current importer fail for most compacted repositories. The UI reports that failure instead of presenting partial data as complete.
 - npm reported 3 dependency audit findings (1 moderate, 2 critical) during install. They were not automatically force-updated; review the dependency tree before a release.
+
+## Task 1 motion preferences (2026-11-04)
+
+System reduced-motion preference is observed live until the existing toggle supplies a session override. Effective motion reaches camera auto-rotation, control damping, star speed and tree frame updates. Tree positions freeze immediately when disabled. History playback and scrubbing remain available; future scene transitions must use the same effective preference. Existing reduced CSS remains active. Mapping and provenance are unchanged.
+
+Verification: npm test passed 4 tests, including system changes, override, scene props and replay under reduced motion. npm run build passed with the existing large-chunk warning. Component tests mock the renderer and do not prove WebGL behavior.
+
+Profiling limitation: local Playwright is not installed. No actual browser/orbit interaction or GPU measurement was performed. Both requested synthetic datasets (360 and 1,000 events) remain unmeasured: device/browser/viewport/pixel ratio/draw calls/frame timing are unavailable. No timing or FPS claim is made. Follow-up baseline procedure: load each generated fixture via localStorage, reload, record hardware/browser/viewport/DPR, warm up, collect renderer draw calls and median/p95 frame intervals over a fixed window, then repeat with motion disabled and while replaying. This task has not completed the profiling acceptance gate.
