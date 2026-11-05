@@ -148,3 +148,6 @@ Task7 review fixes: legacy Git events now receive project/SHA IDs, unknown branc
 
 ## Final acceptance — 2026-11-05
 All seven slices completed and independently reviewed. Whole-branch review: no Critical or Important findings. Final npm test: nine Vitest tests and three exporter integration tests passed, including 140,000 commits; final npm run build passed. Existing large-bundle and Node localStorage warnings remain. Actual Chrome evidence covers the private 2,490-pair snapshot, provenance, replay, selection, persistence and demo switching. Minor follow-ups and execution decisions are in tasks/todo.md and docs/EXECUTION.md. Branch preserved locally; no push, merge or deployment.
+
+## Main integration — 2026-11-05
+Fast-forward merged the reviewed branch into main at 8319548. Preserved private local/history.json in the main checkout with hash verification and mode 0600. Final main checks: 9 Vitest tests and 3 exporter integration tests passed; production build passed with existing chunk warning. Initial npm ci cache ENOTEMPTY error resolved on retry. Removed the merged implementation worktree and branch. No push or deployment.
