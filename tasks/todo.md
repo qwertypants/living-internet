@@ -52,9 +52,9 @@ Execution authorized. Unfinished work remains unchecked. See plan.md for design 
 
 ## Checkpoint: After task 2
 
-- [ ] All tests and production build pass.
-- [ ] Import/demo, selection and timeline flows still work; synthetic provenance remains visible.
-- [ ] Independently review the result and record measured limits before the next phase.
+- [x] All tests and production build pass.
+- [x] Import/demo, selection and timeline flows still work; synthetic provenance remains visible.
+- [x] Independently review the result and record measured limits before the next phase.
 
 ## Task 3: Create a varied instanced forest
 
@@ -109,9 +109,9 @@ Execution authorized. Unfinished work remains unchecked. See plan.md for design 
 
 ## Checkpoint: After task 4
 
-- [ ] All tests and production build pass.
-- [ ] Import/demo, selection and timeline flows still work; synthetic provenance remains visible.
-- [ ] Independently review the result and record measured limits before the next phase.
+- [x] All tests and production build pass.
+- [x] Import/demo, selection and timeline flows still work; synthetic provenance remains visible.
+- [x] Independently review the result and record measured limits before the next phase.
 
 ## Task 5: Sculpt the island silhouette
 
@@ -139,9 +139,9 @@ Execution authorized. Unfinished work remains unchecked. See plan.md for design 
 
 ## Checkpoint: After task 5
 
-- [ ] All tests and production build pass.
-- [ ] Import/demo, selection and timeline flows still work; synthetic provenance remains visible.
-- [ ] Independently review the result and record measured limits before the next phase.
+- [x] All tests and production build pass.
+- [x] Import/demo, selection and timeline flows still work; synthetic provenance remains visible.
+- [x] Independently review the result and record measured limits before the next phase.
 
 
 ## Task 6: Export all local authored Git history
@@ -166,15 +166,18 @@ Execution authorized. Unfinished work remains unchecked. See plan.md for design 
 **Description:** Validate the exporter envelope and connect the private local file to the browser prototype with replay, provenance and persistence.
 
 **Acceptance criteria:**
-- [ ] Validate the versioned envelope strictly before replacing data. Canonicalize events on import and legacy storage read so ordering, cursor labels and replay agree. Stable IDs include project identity and SHA; parents remain metadata only, no invented branch memberships or ancestry paths. Invalid input preserves the existing world and reports an error.
-- [ ] Provide explicit JSON file import and a local development-only loading path for ignored local/history.json. Private history is never placed under public/ or bundled into dist. No external network requests or source-repository writes. Load all exported user history, retain project labels/provenance in inspector, keep synthetic demo explicitly selectable.
-- [ ] Verify the actual local dataset loads, sampled SHA/project provenance agrees with export, replay/selection and reload persistence work; tests cover malformed input, stable repeat import and canonical ordering. Keep previous camera/forest/growth checks working.
+- [x] Validate the versioned envelope strictly before replacing data. Canonicalize events on import and legacy storage read so ordering, cursor labels and replay agree. Stable IDs include project identity and SHA; parents remain metadata only, no invented branch memberships or ancestry paths. Invalid input preserves the existing world and reports an error.
+- [x] Provide explicit JSON file import and a local development-only loading path for ignored local/history.json. Private history is never placed under public/ or bundled into dist. No external network requests or source-repository writes. Load all exported user history, retain project labels/provenance in inspector, keep synthetic demo explicitly selectable.
+- [x] Verify the actual local dataset loads, sampled SHA/project provenance agrees with export, replay/selection and reload persistence work; tests cover malformed input, stable repeat import and canonical ordering. Keep previous camera/forest/growth checks working.
 
 **Verification:**
-- [ ] npm test and npm run build pass.
-- [ ] Actual Chrome readback proves real dataset count, source labels, sampled SHA, selection, timeline and reload.
-- [ ] Production bundle contains no actual user dataset or private source paths; record limits and outstanding aliases/unreadable roots.
+- [x] npm test and npm run build pass.
+- [x] Actual Chrome readback proves real dataset count, source labels, sampled SHA, selection, timeline and reload.
+- [x] Production bundle contains no actual user dataset or private source paths; record limits and outstanding aliases/unreadable roots.
 
 **Dependencies:** 6, docs/history-format.md.
 **Files likely touched:** src/domain.ts, src/domain.test.ts, src/App.tsx, vite.config.ts, README.md, docs/PROGRESS.md, focused UI tests/scripts as needed.
 **Estimated scope:** Medium implementation plus verification artifacts.
+
+## Completion limits
+Final review approved the browser prototype with minor follow-ups: reject unknown envelope keys, portable browser-harness setup, narrow overview framing, and explicit repeat-load completion assertion. Required fields are validated; extra JSON keys are currently discarded. Actual snapshot remains private and unbundled. Coverage excludes inaccessible discovery locations and unknown author aliases.

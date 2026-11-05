@@ -66,3 +66,6 @@ Implement tasks 1–5 sequentially with independent reviews, then Task 6 for rea
 
 ## Real-history execution detail
 Task 6 exports all authored reachable history with the metadata-only schema documented in tasks/todo.md. Task 7 validates and loads it locally. Private inventory covers 167 discovered repositories; Desktop and Downloads scans were denied. One configured author identity matched 2,476 repository/commit pairs across 99 repositories at preflight. Counts will be refreshed at export; older unconfigured aliases are not inferred.
+
+## Completion
+All seven implementation slices and independent reviews complete. Browser prototype only. See docs/PROGRESS.md for actual tests, performance and privacy limits; minor final-review follow-ups are recorded in tasks/todo.md. Work remains on the isolated implementation branch.
