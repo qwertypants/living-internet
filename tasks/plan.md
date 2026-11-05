@@ -31,7 +31,7 @@ Make the existing browser prototype feel like a place you can explore. The first
 
 ## Ordered task list
 - [x] Task 1: Make the scene motion-safe and record a performance baseline.
-- [ ] Task 2: Add a cancellable camera descent to selected commits.
+- [x] Task 2: Add a cancellable camera descent to selected commits.
 - [ ] Checkpoint A: navigation and motion preferences work together.
 - [ ] Task 3: Render a varied, instanced forest with stable picking.
 - [ ] Task 4: Choreograph growth during event replay.

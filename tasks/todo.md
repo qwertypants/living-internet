@@ -31,15 +31,15 @@ Execution authorized. Unfinished work remains unchecked. See plan.md for design 
 **Description:** Add a short camera flight to the selected tree and an accessible Home action, retaining the provenance inspector.
 
 **Acceptance criteria:**
-- [ ] Selection frames the chosen tree and keeps the inspector readable at desktop and narrow widths.
-- [ ] Manual orbit interrupts a flight; Home restores overview; repeated selections never leave conflicting camera animation running.
-- [ ] Reduced motion snaps immediately; rewind that removes the selected tree clears its focus safely.
+- [x] Selection frames the chosen tree and keeps the inspector readable at desktop and narrow widths.
+- [x] Manual orbit interrupts a flight; Home restores overview; repeated selections never leave conflicting camera animation running.
+- [x] Reduced motion snaps immediately; rewind that removes the selected tree clears its focus safely.
 
 **Verification:**
-- [ ] `npm test` passes, including relevant behavior tests.
-- [ ] `npm run build` passes.
-- [ ] Manual check: Select an edge tree, interrupt a flight, select another, rewind before its event, and return Home with pointer and keyboard.
-- [ ] Record actual results and limits in `docs/PROGRESS.md`.
+- [x] `npm test` passes, including relevant behavior tests.
+- [x] `npm run build` passes.
+- [x] Manual check: Select an edge tree, interrupt a flight, select another, rewind before its event, and return Home with pointer and keyboard.
+- [x] Record actual results and limits in `docs/PROGRESS.md`.
 
 **Dependencies:** 1
 
