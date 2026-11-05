@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "test": "vitest run",
+    "test": "vitest run && node --test scripts/export-git-history.checks.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
