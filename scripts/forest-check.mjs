@@ -54,8 +54,8 @@ try {
   await page.screenshot({path:`/tmp/mycelium-forest-${count}-desktop.png`});
   await page.setViewportSize({width:390,height:1000});await page.waitForTimeout(200);
   await page.screenshot({path:`/tmp/mycelium-forest-${count}-narrow.png`});
-  await page.getByRole('button',{name:'Forest: detailed',exact:true}).click();
-  assert(await page.getByRole('button',{name:'Forest: simple',exact:true}).isVisible());
+  await page.getByRole('button',{name:'Scene: detailed',exact:true}).click();
+  assert(await page.getByRole('button',{name:'Scene: simple',exact:true}).isVisible());
   assert.deepEqual(errors,[]);console.log(`${count}: PASS pointer/keyboard canonical SHA after reorder, rewind and fast-forward; marker and quality toggle`);
   await page.close();
  }

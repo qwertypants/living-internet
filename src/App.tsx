@@ -38,23 +38,33 @@ export function Island({
   growthRunning?: boolean;
   growthEpoch?: number;
 }) {
+  // Fixed phase seed; every ring shares a flat, stable tree anchor plane at y=0.
   const land = useMemo(() => {
-    const g = new THREE.CylinderGeometry(5.6, 6, 0.55, 128, 20);
+    const g = new THREE.CylinderGeometry(5.8, 0.65, 3.4, simpleForest ? 32 : 80, 8);
     const p = g.attributes.position;
     for (let i = 0; i < p.count; i++) {
-      const x = p.getX(i),
-        z = p.getZ(i),
-        a = Math.atan2(z, x),
-        r = Math.hypot(x, z);
-      const noise =
-        Math.sin(a * 7 + 1.4) * 0.18 +
-        Math.cos(a * 11) * 0.1 +
-        Math.sin(r * 1.9 + a * 3) * 0.11;
-      p.setY(i, p.getY(i) + noise);
+      const y = p.getY(i), depth = (1.7 - y) / 3.4;
+      const x = p.getX(i), z = p.getZ(i), a = Math.atan2(z, x);
+      const ripple = 1 + depth * (0.09 * Math.sin(a * 7 + 1.4) + 0.06 * Math.cos(a * 11 + depth * 9));
+      p.setXYZ(i, x * ripple, Math.min(0, y - 1.7), z * ripple);
     }
+    const colors = new Float32Array(p.count * 3);
+    for (let i = 0; i < p.count; i++) {
+      const band = Math.floor(-p.getY(i) * 5 + Math.sin(Math.atan2(p.getZ(i), p.getX(i)) * 7 + 1.4) * 0.3);
+      const color = new THREE.Color(p.getY(i) === 0 ? "#19362e" : band % 3 === 0 ? "#456052" : "#263d34");
+      color.toArray(colors, i * 3);
+    }
+    g.setAttribute("color", new THREE.BufferAttribute(colors, 3));
     g.computeVertexNormals();
     return g;
-  }, []);
+  }, [simpleForest]);
+  useEffect(() => () => land.dispose(), [land]);
+  const roots = useMemo(() => Array.from({ length: simpleForest ? 8 : 18 }, (_, i) => {
+    const angle = i * 2.399963 + 1.4;
+    const radius = 4.5 + Math.sin(i * 7.1) * 0.45;
+    const x = Math.cos(angle) * radius, z = Math.sin(angle) * radius;
+    return [[x, -0.55, z], [x * 0.9, -1.3, z * 0.9], [x * 0.88 + Math.sin(i) * 0.2, -2.1 - (i % 4) * 0.23, z * 0.88]] as [number, number, number][];
+  }), [simpleForest]);
   const trails = useMemo(() => {
     const m = new Map<string, Tree[]>();
     trees.forEach((t) =>
@@ -75,6 +85,7 @@ export function Island({
   }, [trees]);
   return (
     <>
+      <hemisphereLight args={["#9bdec6", "#688778", 1.2]} />
       <ambientLight intensity={0.62} color="#9bdec6" />
       <directionalLight position={[-5, 8, 4]} intensity={3} color="#d8ffe8" />
       <pointLight
@@ -83,18 +94,16 @@ export function Island({
         color="#37ffc0"
         distance={10}
       />
-      <mesh geometry={land} position={[0, -0.25, 0]} receiveShadow>
-        <meshStandardMaterial color="#112c27" roughness={0.85} flatShading />
+      <mesh name="rocky-island" geometry={land} receiveShadow>
+        <meshStandardMaterial vertexColors roughness={0.95} flatShading />
       </mesh>
-      <mesh position={[0, -0.05, 0]}>
-        <cylinderGeometry args={[5.64, 6.04, 0.25, 128, 1, true]} />
-        <meshBasicMaterial
-          color="#30d6ad"
-          wireframe
-          transparent
-          opacity={0.19}
-        />
-      </mesh>
+      <group name="decorative-roots" userData={{ decorative: true }}>
+        {roots.map((points, i) => <Line key={i} points={points} color="#456756" lineWidth={simpleForest ? 1 : 1.5} />)}
+      </group>
+      {!simpleForest && !reduced && <mesh name="decorative-mist" rotation={[-Math.PI / 2, 0, 0]} position={[0, -2.6, 0]}>
+        <ringGeometry args={[3.1, 6.4, 64]} />
+        <meshBasicMaterial color="#8ac6b0" transparent opacity={0.035} depthWrite={false} side={THREE.DoubleSide} />
+      </mesh>}
       {trails.map((points, i) => (
         <Line
           key={i}
@@ -373,7 +382,7 @@ export default function App() {
             <option value="">Overview</option>
             {trees.map(t => <option key={t.id} value={t.id}>{t.payload.sha.slice(0, 8)} — {t.payload.subject}</option>)}
           </select></label>
-          <button aria-pressed={simpleForest} onClick={() => setSimpleForest(value => !value)}>Forest: {simpleForest ? "simple" : "detailed"}</button>
+          <button aria-pressed={simpleForest} onClick={() => setSimpleForest(value => !value)}>Scene: {simpleForest ? "simple" : "detailed"}</button>
         </div>
         <div className="eyebrow">
           <span className="pulse" /> SYSTEMS GROWING{" "}
@@ -462,7 +471,7 @@ export default function App() {
                 <small>WORLD OBJECT</small>
                 <b>
                   <TreePine size={14} /> Commit tree{" "}
-                  <span className="decorative">· visual metaphor</span>
+                  <span className="decorative">· visual metaphor; roots are decorative</span>
                 </b>
               </div>
             </div>

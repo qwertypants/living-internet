@@ -94,6 +94,6 @@ it("selects canonical commits with arrow keys after rewind and input reordering"
   expect(select.value).toBe("");
   fireEvent.keyDown(select, { key: "ArrowDown" });
   expect(select.value).toBe(replay(events, 3)[0].id);
-  fireEvent.click(screen.getByRole("button", { name: "Forest: detailed" }));
-  expect(screen.getByRole("button", { name: "Forest: simple" }).getAttribute("aria-pressed")).toBe("true");
+  fireEvent.click(screen.getByRole("button", { name: "Scene: detailed" }));
+  expect(screen.getByRole("button", { name: "Scene: simple" }).getAttribute("aria-pressed")).toBe("true");
 });
