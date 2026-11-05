@@ -216,6 +216,7 @@ function BotanicalBatch({ items, species, simple, onPick, running, epoch, reduce
   useEffect(() => update(0), [items, simple, epoch, reduced]);
   useFrame((_, delta) => { if (active.current.size) update(delta); });
   const pick = (event: import("@react-three/fiber").ThreeEvent<MouseEvent>) => {
+    if (event.delta > 2) return;
     const tree = items[event.instanceId ?? -1];
     if (tree) { event.stopPropagation(); onPick(tree); }
   };
