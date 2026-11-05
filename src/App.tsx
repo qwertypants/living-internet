@@ -26,6 +26,8 @@ export function Island({
   reduced,
   homeRequest = 0,
   simpleForest = false,
+  growthRunning = false,
+  growthEpoch = 0,
 }: {
   trees: Tree[];
   selected: string | null;
@@ -33,6 +35,8 @@ export function Island({
   reduced: boolean;
   homeRequest?: number;
   simpleForest?: boolean;
+  growthRunning?: boolean;
+  growthEpoch?: number;
 }) {
   const land = useMemo(() => {
     const g = new THREE.CylinderGeometry(5.6, 6, 0.55, 128, 20);
@@ -101,7 +105,7 @@ export function Island({
           opacity={0.26}
         />
       ))}
-      <Forest trees={trees} selected={selected} onPick={onPick} simple={simpleForest} />
+      <Forest trees={trees} selected={selected} onPick={onPick} simple={simpleForest} running={growthRunning} epoch={growthEpoch} reduced={reduced} />
       <Stars
         radius={70}
         depth={35}
@@ -150,7 +154,7 @@ function CameraFlight({ tree, reduced, homeRequest }: { tree?: Tree; reduced: bo
     maxPolarAngle={Math.PI * 0.49} enableDamping={false} autoRotate={!reduced && !tree && !manual && !flying}
     autoRotateSpeed={0.18} onStart={() => { flight.current = null; setFlying(false); setManual(true); }} />;
 }
-function Forest({ trees, selected, onPick, simple }: { trees: Tree[]; selected: string | null; onPick: (tree: Tree) => void; simple: boolean }) {
+function Forest({ trees, selected, onPick, simple, running, epoch, reduced }: { trees: Tree[]; selected: string | null; onPick: (tree: Tree) => void; simple: boolean; running: boolean; epoch: number; reduced: boolean }) {
   // Buckets and instance lookup are rebuilt together, never indexed into the input array.
   const buckets = useMemo(() => [0, 1, 2].map(species => trees.filter(t => {
     let hash = 0;
@@ -159,7 +163,7 @@ function Forest({ trees, selected, onPick, simple }: { trees: Tree[]; selected: 
   })), [trees]);
   const focus = trees.find(t => t.id === selected);
   return <group name="forest">
-    {buckets.map((items, species) => <BotanicalBatch key={species} items={items} species={species} simple={simple} onPick={onPick} />)}
+    {buckets.map((items, species) => <BotanicalBatch key={species} items={items} species={species} simple={simple} onPick={onPick} running={running} epoch={epoch} reduced={reduced} />)}
     {focus && <group name="selection-marker" position={[focus.x, 0.08, focus.z]}>
       <mesh rotation={[-Math.PI / 2, 0, 0]} renderOrder={10}>
         <ringGeometry args={[0.32, 0.38, 4]} />
@@ -172,17 +176,34 @@ function Forest({ trees, selected, onPick, simple }: { trees: Tree[]; selected: 
     </group>}
   </group>;
 }
-function BotanicalBatch({ items, species, simple, onPick }: { items: Tree[]; species: number; simple: boolean; onPick: (tree: Tree) => void }) {
+function BotanicalBatch({ items, species, simple, onPick, running, epoch, reduced }: { items: Tree[]; species: number; simple: boolean; onPick: (tree: Tree) => void; running: boolean; epoch: number; reduced: boolean }) {
   const trunks = useRef<THREE.InstancedMesh>(null);
   const crowns = useRef<THREE.InstancedMesh>(null);
+  const active = useRef(new Map<string, number>());
+  const previous = useRef(new Set(items.map(t => t.id)));
+  const lastEpoch = useRef(epoch);
   useEffect(() => {
+    if (reduced || epoch !== lastEpoch.current) active.current.clear();
+    else if (running) for (const tree of items) if (!previous.current.has(tree.id)) active.current.set(tree.id, 0);
+    previous.current = new Set(items.map(t => t.id));
+    for (const id of active.current.keys()) if (!previous.current.has(id)) active.current.delete(id);
+    lastEpoch.current = epoch;
+  }, [items, epoch, reduced, running]);
+  const update = (delta: number) => {
     const dummy = new THREE.Object3D();
     items.forEach((tree, index) => {
-      dummy.position.set(tree.x, tree.height / 2, tree.z);
-      dummy.scale.set(1, tree.height, 1); dummy.updateMatrix();
+      let elapsed = active.current.get(tree.id);
+      if (elapsed !== undefined && running) { elapsed = Math.min(0.6, elapsed + delta); active.current.set(tree.id, elapsed); }
+      const t = elapsed === undefined || reduced ? 1 : elapsed / 0.6;
+      const sprout = 0.08 + 0.92 * (t * t * (3 - 2 * t));
+      const canopy = sprout * (1 + 0.06 * Math.sin(Math.PI * t));
+      if (t === 1) active.current.delete(tree.id);
+      dummy.position.set(tree.x, tree.height * sprout / 2, tree.z);
+      dummy.scale.set(sprout, tree.height * sprout, sprout); dummy.updateMatrix();
       trunks.current!.setMatrixAt(index, dummy.matrix);
-      dummy.position.y = tree.height * 0.92;
+      dummy.position.y = tree.height * 0.92 * sprout;
       dummy.scale.set(tree.height * 0.32, tree.height * (species === 1 ? 0.65 : species === 2 ? 0.22 : 0.32), tree.height * 0.32);
+      dummy.scale.multiplyScalar(canopy);
       dummy.updateMatrix(); crowns.current!.setMatrixAt(index, dummy.matrix);
       crowns.current!.setColorAt(index, new THREE.Color(`hsl(${tree.hue},82%,63%)`));
     });
@@ -191,7 +212,9 @@ function BotanicalBatch({ items, species, simple, onPick }: { items: Tree[]; spe
       if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
       mesh.computeBoundingSphere();
     }
-  }, [items, simple]);
+  };
+  useEffect(() => update(0), [items, simple, epoch, reduced]);
+  useFrame((_, delta) => { if (active.current.size) update(delta); });
   const pick = (event: import("@react-three/fiber").ThreeEvent<MouseEvent>) => {
     const tree = items[event.instanceId ?? -1];
     if (tree) { event.stopPropagation(); onPick(tree); }
@@ -218,6 +241,8 @@ export default function App() {
   });
   const [cursor, setCursor] = useState(events.length);
   const [playing, setPlaying] = useState(false);
+  const [growthEpoch, setGrowthEpoch] = useState(0);
+  const [manualPause, setManualPause] = useState(false);
   const [speed, setSpeed] = useState(1);
   const [selected, setSelected] = useState<string | null>(
     null,
@@ -324,6 +349,8 @@ export default function App() {
         >
           <color attach="background" args={["#081411"]} />
           <Island
+            growthRunning={!manualPause}
+            growthEpoch={growthEpoch}
             homeRequest={homeRequest}
             simpleForest={simpleForest}
             reduced={reduced}
@@ -500,7 +527,7 @@ export default function App() {
               min="0"
               max={events.length}
               value={cursor}
-              onChange={(e) => setCursor(Number(e.target.value))}
+              onChange={(e) => { setGrowthEpoch(n => n + 1); setCursor(Number(e.target.value)); }}
             />
           </div>
           <div className="date-labels">
@@ -531,6 +558,7 @@ export default function App() {
               className="round small"
               title="Restart"
               onClick={() => {
+                setGrowthEpoch(n => n + 1);
                 setCursor(0);
                 setPlaying(false);
               }}
@@ -542,6 +570,7 @@ export default function App() {
               title={playing ? "Pause" : "Play"}
               onClick={() => {
                 if (cursor >= events.length) setCursor(0);
+                setManualPause(playing);
                 setPlaying(!playing);
               }}
             >
@@ -554,7 +583,7 @@ export default function App() {
             <button
               className="round small"
               title="Fast forward"
-              onClick={() => setCursor(Math.min(events.length, cursor + 12))}
+              onClick={() => { setGrowthEpoch(n => n + 1); setCursor(Math.min(events.length, cursor + 12)); }}
             >
               <FastForward size={15} />
             </button>
