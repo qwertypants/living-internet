@@ -2,6 +2,8 @@
 
 An offline-friendly, visual-first prototype that turns commit events into a replayable bioluminescent island. No API keys or services are used. The current build runs as a browser app; imported event metadata is stored in this browser's local storage.
 
+**[Open the live MYCELIUM site](https://qwertypants.github.io/living-internet/)**
+
 ## Run locally
 
 ```sh
