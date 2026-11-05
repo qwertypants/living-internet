@@ -151,3 +151,6 @@ All seven slices completed and independently reviewed. Whole-branch review: no C
 
 ## Main integration — 2026-11-05
 Fast-forward merged the reviewed branch into main at 8319548. Preserved private local/history.json in the main checkout with hash verification and mode 0600. Final main checks: 9 Vitest tests and 3 exporter integration tests passed; production build passed with existing chunk warning. Initial npm ci cache ENOTEMPTY error resolved on retry. Removed the merged implementation worktree and branch. No push or deployment.
+
+## GitHub Pages publication — 2026-11-05
+Code pushed to qwertypants/living-internet on main. Added the Pages Actions workflow with npm test before deployment and a /living-internet/ production asset base. Local npm run build:pages passed; actual private SHA/project identifiers were absent from the built assets and no local directory was copied. Pages configured for Actions and HTTPS. Deployment status and live verification are available in the workflow run and session handoff. Public first-run uses synthetic fixtures; real metadata remains local or explicitly imported in each browser.
