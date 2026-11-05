@@ -9,7 +9,7 @@ npm install
 npm run dev
 ```
 
-Open the local URL printed by Vite. The first launch loads a deterministic 360-event demo. Select a tree to inspect its source event, drag the time slider to scrub, and use play/speed controls to replay. “Import repo” asks for a repository folder; this browser prototype currently reads reachable loose Git commit objects from reflogs. Git packfiles are not supported.
+Open the local URL printed by Vite. The first launch loads a deterministic 360-event demo. Select a tree to inspect its source event, drag the time slider to scrub, and use play/speed controls to replay. Import history JSON from the metadata exporter described below. The exporter supports packed Git histories.
 
 ## Verify
 

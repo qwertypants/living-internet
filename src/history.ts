@@ -22,5 +22,14 @@ export function parseHistory(value: unknown): Event[] {
 export function readStored(value: unknown): Event[] {
   if (!Array.isArray(value)) return parseHistory(value);
   for (const entry of value) { const e = object(entry), p = object(e.payload); if (typeof e.id !== 'string' || !['git','synthetic'].includes(String(e.source)) || e.kind !== 'git.commit' || typeof e.projectId !== 'string' || typeof e.occurredAt !== 'string' || !Number.isFinite(Date.parse(e.occurredAt)) || typeof p.sha !== 'string' || typeof p.subject !== 'string' || typeof p.branch !== 'string') throw Error('Invalid saved events'); }
-  return toTrees(value as Event[]);
+  const events = (value as Event[]).map(event => {
+    const occurredAt = new Date(event.occurredAt).toISOString();
+    if (event.source === 'synthetic') return { ...event, occurredAt };
+    if (!sha.test(event.payload.sha)) throw Error('Invalid saved Git hash');
+    const parents = event.payload.parents ?? [];
+    if (!Array.isArray(parents) || parents.some(parent => typeof parent !== 'string' || !sha.test(parent))) throw Error('Invalid saved parents');
+    return { ...event, id: `git:${event.projectId}:${event.payload.sha}`, occurredAt,
+      payload: { sha: event.payload.sha, subject: 'Subject not imported', branch: '', projectLabel: event.payload.projectLabel, parents } };
+  });
+  return toTrees(events);
 }
