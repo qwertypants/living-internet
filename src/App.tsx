@@ -1,10 +1,10 @@
+import { parseHistory, readStored } from "./history";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Line, OrbitControls, Stars } from "@react-three/drei";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import {
   Activity,
-  ArrowDownToLine,
   AudioLines,
   ChevronDown,
   Command,
@@ -18,7 +18,7 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react";
-import { Event, Tree, makeDemoEvents, parseLooseGit, replay } from "./domain";
+import { Event, Tree, makeDemoEvents, replay } from "./domain";
 export function Island({
   trees,
   selected,
@@ -68,7 +68,7 @@ export function Island({
   const trails = useMemo(() => {
     const m = new Map<string, Tree[]>();
     trees.forEach((t) =>
-      m.set(t.payload.branch, [...(m.get(t.payload.branch) || []), t]),
+      t.payload.branch && m.set(t.payload.branch, [...(m.get(t.payload.branch) || []), t]),
     );
     return [...m]
       .map(
@@ -244,7 +244,7 @@ export default function App() {
   const [events, setEvents] = useState<Event[]>(() => {
     try {
       const saved = localStorage.getItem("mycelium.events.v1");
-      return saved ? (JSON.parse(saved) as Event[]) : allDemo;
+      return saved ? readStored(JSON.parse(saved)) : allDemo;
     } catch {
       return allDemo;
     }
@@ -302,18 +302,9 @@ export default function App() {
     );
     return () => clearInterval(timer);
   }, [playing, speed, events.length]);
-  async function importRepo(files: FileList | null) {
-    if (!files) return;
-    setError("");
-    try {
-      const imported = await parseLooseGit(files);
-      setEvents(imported);
-      setCursor(imported.length);
-      setSelected(imported.at(-1)?.id || null);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Import failed");
-    }
-  }
+  function install(imported: Event[]) { setEvents(imported); setCursor(imported.length); setSelected(null); setPlaying(false); setGrowthEpoch(n => n + 1); setError(""); }
+  async function loadHistory(input: Promise<unknown>) { try { install(parseHistory(await input)); } catch (e) { setError(e instanceof Error ? e.message : "Import failed"); } }
+  useEffect(() => { if (import.meta.env.DEV && new URLSearchParams(location.search).get('history') === 'local') void loadHistory(fetch('/__local-history').then(r => { if (!r.ok) throw Error('Local history unavailable'); return r.json(); })); }, []);
   return (
     <main className={reduced ? "app reduced" : "app"}>
       <header className="topbar">
@@ -371,6 +362,9 @@ export default function App() {
         </Canvas>
         <div className="scene-vignette" />
         <div className="scene-controls">
+          <label>Import history JSON <input aria-label="Import history JSON" type="file" accept=".json,application/json" onChange={e => { const file = e.target.files?.[0]; if (file) void loadHistory(file.text().then(JSON.parse)); e.target.value = ''; }} /></label>
+          {import.meta.env.DEV && <button onClick={() => void loadHistory(fetch('/__local-history').then(r => { if (!r.ok) throw Error('Local history unavailable'); return r.json(); }))}>Load local history</button>}
+          <button onClick={() => install(allDemo)}>Synthetic demo</button>
           <button onClick={() => { setSelected(null); setHomeRequest(n => n + 1); }}>Home</button>
           <label>Inspect commit <select aria-label="Inspect commit" value={selected || ""} onChange={e => setSelected(e.target.value || null)} onKeyDown={event => {
             const control = event.currentTarget;
@@ -407,7 +401,7 @@ export default function App() {
           <div>
             <small>BRANCHES</small>
             <b>
-              {new Set(trees.map((t) => t.payload.branch)).size}
+              {new Set(trees.map((t) => t.payload.branch).filter(Boolean)).size}
               <i> paths</i>
             </b>
           </div>
@@ -442,7 +436,7 @@ export default function App() {
                 </span>
                 <code>{selectedTree.payload.sha.slice(0, 8)}</code>
                 <span className="branch-pill">
-                  {selectedTree.payload.branch}
+                  {selectedTree.payload.branch || "Branch unknown; parents metadata only"}
                 </span>
               </div>
             </div>
@@ -464,7 +458,7 @@ export default function App() {
                 <b>
                   {selectedTree.source === "synthetic"
                     ? "mycelium-demo"
-                    : "Imported local repository"}
+                    : selectedTree.payload.projectLabel || "Imported local repository"}
                 </b>
               </div>
               <div>
@@ -622,15 +616,7 @@ export default function App() {
               8×
             </button>
           </div>
-          <label className="import-button">
-            <ArrowDownToLine size={15} /> IMPORT REPO
-            <input
-              type="file"
-              multiple // @ts-expect-error Chromium directory picker
-              webkitdirectory=""
-              onChange={(e) => void importRepo(e.target.files)}
-            />
-          </label>
+
         </div>
         {error && (
           <div role="alert" className="error">
