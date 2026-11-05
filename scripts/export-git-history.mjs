@@ -12,7 +12,7 @@ async function git(path, args, consume) {
   });
   const completion = new Promise((yes, no) => {
     child.on('error', no);
-    child.on('close', code => code === 0 ? yes() : no(new Error('Git source failed')));
+    child.on('close', code => code === 0 ? yes() : no(Object.assign(new Error('Git source failed'), { exitCode: code })));
   });
   completion.catch(() => {});
   const timer = setTimeout(() => child.kill(), 300000);
@@ -45,7 +45,10 @@ export async function exportHistory(inventory) {
     try {
       const common = await realpath(resolve(entry.path, await scalar(entry.path, ['rev-parse', '--git-common-dir'])));
       // Inventory hints are untrusted; Git is authoritative.
-      const email = await scalar(entry.path, ['config', '--get', 'user.email']).catch(() => '');
+      const email = await scalar(entry.path, ['config', '--get', 'user.email']).catch(error => {
+        if (error.exitCode === 1) return '';
+        throw error;
+      });
       if (email) identities.add(email.toLowerCase());
       const label = basename(entry.path);
       if (!repos.has(common) || label < repos.get(common).label) repos.set(common, { path: entry.path, label });
@@ -64,7 +67,7 @@ export async function exportHistory(inventory) {
         if (found.size > 2000000) throw new Error('Commit resource limit exceeded');
       });
       projects.push({ id, label: repo.label });
-      commits.push(...found.values());
+      for (const commit of found.values()) commits.push(commit);
     } catch { unreadable++; }
   }
   projects.sort((a,b) => a.id.localeCompare(b.id));
