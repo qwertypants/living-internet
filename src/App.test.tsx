@@ -9,20 +9,14 @@ import {
 import { afterEach, expect, it, vi } from "vitest";
 import App from "./App";
 
-vi.mock("@react-three/fiber", () => ({
-  Canvas: ({ children }: { children: React.ReactNode }) => (
-    <div>{children}</div>
-  ),
-  useFrame: vi.fn(),
+vi.mock("@react-three/fiber", async (importOriginal) => ({
+  ...await importOriginal<typeof import("@react-three/fiber")>(),
+  Canvas: () => null,
 }));
 vi.mock("@react-three/drei", () => ({
   Line: () => null,
-  Stars: ({ speed }: { speed: number }) => (
-    <div data-testid="stars">{speed}</div>
-  ),
-  OrbitControls: ({ autoRotate }: { autoRotate: boolean }) => (
-    <div data-testid="orbit">{String(autoRotate)}</div>
-  ),
+  Stars: vi.fn(() => null),
+  OrbitControls: vi.fn(() => null),
 }));
 afterEach(() => {
   cleanup();
@@ -41,8 +35,7 @@ it("follows system motion changes, allows override and keeps replay usable", () 
   };
   window.matchMedia = vi.fn().mockReturnValue(query);
   render(<App />);
-  expect(screen.getByTestId("orbit").textContent).toBe("false");
-  expect(screen.getByTestId("stars").textContent).toBe("0");
+  expect(screen.getByTitle("Toggle reduced motion").getAttribute("aria-pressed")).toBe("true");
   fireEvent.click(screen.getByTitle("Play"));
   act(() => {
     vi.advanceTimersByTime(270);
@@ -54,9 +47,9 @@ it("follows system motion changes, allows override and keeps replay usable", () 
     query.matches = false;
     listener();
   });
-  expect(screen.getByTestId("orbit").textContent).toBe("true");
+  expect(screen.getByTitle("Toggle reduced motion").getAttribute("aria-pressed")).toBe("false");
   fireEvent.click(screen.getByTitle("Toggle reduced motion"));
-  expect(screen.getByTestId("orbit").textContent).toBe("false");
+  expect(screen.getByTitle("Toggle reduced motion").getAttribute("aria-pressed")).toBe("true");
   act(() => {
     query.matches = true;
     listener();
@@ -64,4 +57,24 @@ it("follows system motion changes, allows override and keeps replay usable", () 
   expect(
     screen.getByTitle("Toggle reduced motion").getAttribute("aria-pressed"),
   ).toBe("true");
+});
+
+it("freezes actual tree frame updates and disables camera damping and stars", async () => {
+  const { create } = await import("@react-three/test-renderer");
+  const { Island } = await import("./App");
+  const { makeDemoEvents, replay } = await import("./domain");
+  const { Stars, OrbitControls } = await import("@react-three/drei");
+  const props = { trees: replay(makeDemoEvents(1), 1), selected: null, onPick: vi.fn() };
+  (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+  const renderer = await create(<Island {...props} reduced={false} />);
+  await renderer.advanceFrames(2, 0.1);
+  const tree = renderer.scene.findByType("Group").instance;
+  expect(tree.position.y).not.toBe(0);
+  await renderer.update(<Island {...props} reduced />);
+  const frozen = tree.position.y;
+  await renderer.advanceFrames(4, 0.5);
+  expect(tree.position.y).toBe(frozen);
+  expect(Stars).toHaveBeenLastCalledWith(expect.objectContaining({ speed: 0 }), undefined);
+  expect(OrbitControls).toHaveBeenLastCalledWith(expect.objectContaining({ autoRotate: false, enableDamping: false }), undefined);
+  await renderer.unmount();
 });

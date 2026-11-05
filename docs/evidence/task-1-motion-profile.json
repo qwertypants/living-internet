@@ -1,0 +1,82 @@
+{
+  "device": {
+    "platform": "darwin",
+    "release": "25.6.0",
+    "arch": "arm64",
+    "cpu": "Apple M3 Max",
+    "memoryGiB": 48
+  },
+  "browser": "156.0.8078.80",
+  "environment": {
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "canvas": [
+      1372,
+      725
+    ],
+    "devicePixelRatio": 1,
+    "rendererPixelRatio": 1,
+    "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3 Max, Unspecified Version)"
+  },
+  "results": [
+    {
+      "count": 360,
+      "mode": "motion",
+      "frames": 300,
+      "medianMs": 16.699999999999818,
+      "p95Ms": 16.800000000000182,
+      "drawCalls": [
+        1087,
+        1087
+      ]
+    },
+    {
+      "count": 360,
+      "mode": "reduced",
+      "frames": 300,
+      "medianMs": 16.69999999999891,
+      "p95Ms": 16.700000000000728,
+      "drawCalls": [
+        1087,
+        1087
+      ]
+    },
+    {
+      "count": 360,
+      "motionChecks": "PASS: active camera/tree/star changes; live system reduction during orbit freezes all; override restores/freezes; reduced replay advances then freezes",
+      "replayCursor": 17
+    },
+    {
+      "count": 1000,
+      "mode": "motion",
+      "frames": 300,
+      "medianMs": 16.699999999999818,
+      "p95Ms": 16.800000000000182,
+      "drawCalls": [
+        3007,
+        3007
+      ]
+    },
+    {
+      "count": 1000,
+      "mode": "reduced",
+      "frames": 300,
+      "medianMs": 16.69999999999891,
+      "p95Ms": 16.799999999999272,
+      "drawCalls": [
+        3007,
+        3007
+      ]
+    },
+    {
+      "count": 1000,
+      "motionChecks": "PASS: active camera/tree/star changes; live system reduction during orbit freezes all; override restores/freezes; reduced replay advances then freezes",
+      "replayCursor": 17
+    }
+  ],
+  "pageErrors": [],
+  "limits": "Headless Chrome on this host; RAF intervals include scheduling, not isolated GPU duration or physical display proof. Five-second samples after two-second warmup. No 60 FPS claim."
+}

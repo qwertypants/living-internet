@@ -19,7 +19,7 @@ import {
   VolumeX,
 } from "lucide-react";
 import { Event, Tree, makeDemoEvents, parseLooseGit, replay } from "./domain";
-function Island({
+export function Island({
   trees,
   selected,
   onPick,
