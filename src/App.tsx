@@ -24,11 +24,13 @@ export function Island({
   selected,
   onPick,
   reduced,
+  homeRequest = 0,
 }: {
   trees: Tree[];
   selected: string | null;
   onPick: (t: Tree) => void;
   reduced: boolean;
+  homeRequest?: number;
 }) {
   const land = useMemo(() => {
     const g = new THREE.CylinderGeometry(5.6, 6, 0.55, 128, 20);
@@ -115,27 +117,31 @@ export function Island({
         fade
         speed={reduced ? 0 : 0.3}
       />
-      <CameraFlight tree={trees.find(t => t.id === selected)} reduced={reduced} />
+      <CameraFlight tree={trees.find(t => t.id === selected)} reduced={reduced} homeRequest={homeRequest} />
       <fog attach="fog" args={["#081411", 14, 31]} />
     </>
   );
 }
-function CameraFlight({ tree, reduced }: { tree?: Tree; reduced: boolean }) {
+function CameraFlight({ tree, reduced, homeRequest }: { tree?: Tree; reduced: boolean; homeRequest: number }) {
   const camera = useThree(s => s.camera);
+  const aspect = useThree(s => s.size.width / s.size.height);
   const controls = useRef<import("three-stdlib").OrbitControls>(null);
   const flight = useRef<{ from: THREE.Vector3; target: THREE.Vector3; to: THREE.Vector3; look: THREE.Vector3; elapsed: number } | null>(null);
   const [manual, setManual] = useState(false);
+  const [flying, setFlying] = useState(false);
   useEffect(() => {
     const c = controls.current;
     if (!c) return;
     setManual(false);
+    c.autoRotate = false;
     const look = tree ? new THREE.Vector3(tree.x, tree.height * 0.6, tree.z) : new THREE.Vector3();
-    const to = tree ? look.clone().add(new THREE.Vector3(3, 2.8, 4)) : new THREE.Vector3(8, 8, 12);
+    const to = tree ? look.clone().add(new THREE.Vector3(3, 2.8, 4).multiplyScalar(Math.min(2, Math.max(1, 1 / aspect)))) : new THREE.Vector3(8, 8, 12);
     flight.current = { from: camera.position.clone(), target: c.target.clone(), to, look, elapsed: 0 };
+    setFlying(!reduced);
     if (reduced) {
       camera.position.copy(to); c.target.copy(look); c.update(); flight.current = null;
     }
-  }, [tree?.id, reduced, camera]);
+  }, [tree?.id, homeRequest, reduced, camera, aspect]);
   useFrame((_, delta) => {
     const f = flight.current, c = controls.current;
     if (!f || !c) return;
@@ -144,11 +150,11 @@ function CameraFlight({ tree, reduced }: { tree?: Tree; reduced: boolean }) {
     camera.position.lerpVectors(f.from, f.to, eased);
     c.target.lerpVectors(f.target, f.look, eased);
     c.update();
-    if (t === 1) flight.current = null;
+    if (t === 1) { flight.current = null; setFlying(false); }
   });
   return <OrbitControls ref={controls} makeDefault enablePan={false} minDistance={2} maxDistance={20}
-    maxPolarAngle={Math.PI * 0.49} enableDamping={false} autoRotate={!reduced && !tree && !manual && !flight.current}
-    autoRotateSpeed={0.18} onStart={() => { flight.current = null; setManual(true); }} />;
+    maxPolarAngle={Math.PI * 0.49} enableDamping={false} autoRotate={!reduced && !tree && !manual && !flying}
+    autoRotateSpeed={0.18} onStart={() => { flight.current = null; setFlying(false); setManual(true); }} />;
 }
 function TreeObject({
   tree,
@@ -217,6 +223,7 @@ export default function App() {
   const [selected, setSelected] = useState<string | null>(
     null,
   );
+  const [homeRequest, setHomeRequest] = useState(0);
   const [error, setError] = useState("");
   const [muted, setMuted] = useState(true);
   const [systemReduced, setSystemReduced] = useState(
@@ -308,7 +315,7 @@ export default function App() {
           </button>
         </div>
       </header>
-      <section className="stage">
+      <section className={`stage${selectedTree ? " focused" : ""}`}>
         <Canvas
           shadows
           camera={{ position: [8, 8, 12], fov: 37 }}
@@ -317,6 +324,7 @@ export default function App() {
         >
           <color attach="background" args={["#081411"]} />
           <Island
+            homeRequest={homeRequest}
             reduced={reduced}
             trees={trees}
             selected={selected}
@@ -324,9 +332,9 @@ export default function App() {
           />
         </Canvas>
         <div className="scene-vignette" />
-        <div style={{ position: "absolute", bottom: 60, left: 24, zIndex: 3, display: "flex", flexWrap: "wrap", maxWidth: "calc(100% - 48px)", gap: 8 }}>
-          <button onClick={() => setSelected(null)}>Home</button>
-          <label>Inspect commit <select style={{ maxWidth: "180px" }} aria-label="Inspect commit" value={selected || ""} onChange={e => setSelected(e.target.value || null)}>
+        <div className="scene-controls">
+          <button onClick={() => { setSelected(null); setHomeRequest(n => n + 1); }}>Home</button>
+          <label>Inspect commit <select aria-label="Inspect commit" value={selected || ""} onChange={e => setSelected(e.target.value || null)}>
             <option value="">Overview</option>
             {trees.map(t => <option key={t.id} value={t.id}>{t.payload.sha.slice(0, 8)} — {t.payload.subject}</option>)}
           </select></label>
