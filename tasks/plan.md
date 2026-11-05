@@ -36,7 +36,7 @@ Make the existing browser prototype feel like a place you can explore. The first
 - [x] Task 3: Render a varied, instanced forest with stable picking.
 - [x] Task 4: Choreograph growth during event replay.
 - [ ] Checkpoint B: dense forest, selection, and history remain correct.
-- [ ] Task 5: Sculpt the floating island and add bounded atmosphere.
+- [x] Task 5: Sculpt the floating island and add bounded atmosphere.
 - [ ] Checkpoint C: visual review, measured performance, tests and build.
 
 Full acceptance criteria and verification are in tasks/todo.md. Each task is a usable vertical slice. Implement sequentially because the slices share src/App.tsx; do not assign simultaneous edits to that file.
@@ -63,3 +63,6 @@ Planning inspection only: source and project docs were read; no browser renderin
 
 ## Execution amendment
 Implement tasks 1–5 sequentially with independent reviews, then Task 6 for real Git metadata. User approval to execute replaces intermediate human checkpoint pauses. Use a native-tool-managed isolated worktree after recording the existing untracked prototype as the baseline. Do not push or merge. Real-history repository selection is pending; do not infer authorization for other local repositories.
+
+## Real-history execution detail
+Task 6 exports all authored reachable history with the metadata-only schema documented in tasks/todo.md. Task 7 validates and loads it locally. Private inventory covers 167 discovered repositories; Desktop and Downloads scans were denied. One configured author identity matched 2,476 repository/commit pairs across 99 repositories at preflight. Counts will be refreshed at export; older unconfigured aliases are not inferred.

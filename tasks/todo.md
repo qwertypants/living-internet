@@ -118,15 +118,15 @@ Execution authorized. Unfinished work remains unchecked. See plan.md for design 
 **Description:** Add seeded rock strata, a tapered underside, hanging decorative roots and restrained mist while preserving stable tree anchors.
 
 **Acceptance criteria:**
-- [ ] Overview and close-up reveal depth without floating tree bases or obscured selection; underside roots are explicitly decorative.
-- [ ] Details are reproducible from a fixed seed; reduced motion and lower quality remove optional animated effects.
-- [ ] Profile the completed scene against baseline; document costs and unresolved limitations without claiming unmeasured FPS.
+- [x] Overview and close-up reveal depth without floating tree bases or obscured selection; underside roots are explicitly decorative.
+- [x] Details are reproducible from a fixed seed; reduced motion and lower quality remove optional animated effects.
+- [x] Profile the completed scene against baseline; document costs and unresolved limitations without claiming unmeasured FPS.
 
 **Verification:**
-- [ ] `npm test` passes, including relevant behavior tests.
-- [ ] `npm run build` passes.
-- [ ] Manual check: Inspect silhouettes at all allowed orbit angles and narrow viewports; compare normal, reduced-motion and lower-quality rendering.
-- [ ] Record actual results and limits in `docs/PROGRESS.md`.
+- [x] `npm test` passes, including relevant behavior tests.
+- [x] `npm run build` passes.
+- [x] Manual check: Inspect silhouettes at all allowed orbit angles and narrow viewports; compare normal, reduced-motion and lower-quality rendering.
+- [x] Record actual results and limits in `docs/PROGRESS.md`.
 
 **Dependencies:** 4
 
@@ -144,22 +144,37 @@ Execution authorized. Unfinished work remains unchecked. See plan.md for design 
 - [ ] Independently review the result and record measured limits before the next phase.
 
 
-## Task 6: Load real Git history
+## Task 6: Export all local authored Git history
 
-**Description:** Provide a bounded local metadata exporter using the Git executable and a validated JSON import path in the browser. The user authorized all their commits across every local repository. Inventory source repositories without writing to them; import only matching authored commits. Support packed histories without a native desktop rewrite.
+**Description:** Build a read-only Git metadata exporter for all user-authorized repositories, then run it on the existing private inventory.
 
 **Acceptance criteria:**
-- [ ] Export all commits authored by configured user Git identities across all refs in discovered local repositories; process history in bounded batches without silently truncating. Discover under /Users/wilkins/Sites first and deduplicate linked worktrees using their Git common directory. Report aliases, unreadable repositories and uncovered roots as limitations. Read identities locally for filtering but never export personal identifiers. Use Git using argument arrays, no shell interpolation, no repository writes; capture full SHA, timestamp and parent IDs. Subjects are excluded by default and opt-in only. Do not export source, diffs, authors, email, remote URLs or absolute paths.
-- [ ] Browser validates the versioned JSON envelope before replacing its events; deterministic identity, replay and provenance work with real metadata, and malformed input leaves existing data intact. Do not imply a branch membership or parent relationship unsupported by exported metadata.
-- [ ] Read and load the discovered real repositories; keep actual metadata in ignored local files and browser storage, never commits. Verify sampled SHAs/counts against read-only Git output and record actual limits.
+- [ ] Read all reachable commits from all refs, exact author-email matching against the union of configured user.email identities; process metadata as a bounded stream/batches, not a silently capped recent sample. Support packed history, deduplicate Git common directories and per-project SHAs, report failed sources. No imported repo writes, no shell interpolation or Git fetch.
+- [ ] Emit schemaVersion 1 JSON with projects [{id,label}], commits [{projectId,sha,parents,occurredAt}], coverage {repositoryCount,matchingRepositoryCount,commitCount,unreadableRepositoryCount}. Project IDs are opaque stable hashes of resolved Git common directories; labels are repository basenames only. SHA/parent IDs are full hashes, timestamps ISO UTC. Do not emit subjects, authors/emails, remote URLs, absolute paths, source or diffs. Configured identities stay process-local.
+- [ ] Run on the ignored inventory, write actual output only to ignored local/history.json in the implementation checkout with private permissions, verify counts and sampled commits against read-only Git. Keep actual data out of commits, public assets and dist.
 
 **Verification:**
-- [ ] Tests exercise a temporary repository with packed commits, repeat exports, malformed imports and export bounds.
-- [ ] `npm test` and `npm run build` pass.
-- [ ] Real-history loading and selection verified, with privacy and packed-history limits recorded in docs/PROGRESS.md.
+- [ ] Temporary Git fixtures cover packed objects, multiple refs, exact author filtering, repeated export stability, duplicate worktrees and no history cutoff.
+- [ ] npm test and npm run build pass; record actual aggregate coverage and limits in docs/PROGRESS.md without private names or paths.
 
-**Dependencies:** 5; repository inventory and configured author identities.
+**Dependencies:** 5.
+**Files likely touched:** scripts/export-git-history.mjs, scripts/export-git-history.test.ts, docs/history-format.md, .gitignore, docs/PROGRESS.md.
+**Estimated scope:** Medium.
 
-**Files likely touched:** scripts/export-git-history.mjs, src/domain.ts, src/App.tsx, tests and README.md; isolate CLI and UI integration if the slice grows.
+## Task 7: Load and inspect the real history
 
-**Estimated scope:** Split exporter and UI wiring into two reviewable substeps if necessary.
+**Description:** Validate the exporter envelope and connect the private local file to the browser prototype with replay, provenance and persistence.
+
+**Acceptance criteria:**
+- [ ] Validate the versioned envelope strictly before replacing data. Canonicalize events on import and legacy storage read so ordering, cursor labels and replay agree. Stable IDs include project identity and SHA; parents remain metadata only, no invented branch memberships or ancestry paths. Invalid input preserves the existing world and reports an error.
+- [ ] Provide explicit JSON file import and a local development-only loading path for ignored local/history.json. Private history is never placed under public/ or bundled into dist. No external network requests or source-repository writes. Load all exported user history, retain project labels/provenance in inspector, keep synthetic demo explicitly selectable.
+- [ ] Verify the actual local dataset loads, sampled SHA/project provenance agrees with export, replay/selection and reload persistence work; tests cover malformed input, stable repeat import and canonical ordering. Keep previous camera/forest/growth checks working.
+
+**Verification:**
+- [ ] npm test and npm run build pass.
+- [ ] Actual Chrome readback proves real dataset count, source labels, sampled SHA, selection, timeline and reload.
+- [ ] Production bundle contains no actual user dataset or private source paths; record limits and outstanding aliases/unreadable roots.
+
+**Dependencies:** 6, docs/history-format.md.
+**Files likely touched:** src/domain.ts, src/domain.test.ts, src/App.tsx, vite.config.ts, README.md, docs/PROGRESS.md, focused UI tests/scripts as needed.
+**Estimated scope:** Medium implementation plus verification artifacts.
