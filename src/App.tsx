@@ -1,5 +1,5 @@
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Line, OrbitControls, Stars } from "@react-three/drei";
+import { Html, Line, OrbitControls, Stars } from "@react-three/drei";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import {
@@ -99,15 +99,7 @@ export function Island({
           opacity={0.26}
         />
       ))}
-      {trees.map((t) => (
-        <TreeObject
-          key={t.id}
-          tree={t}
-          reduced={reduced}
-          selected={selected === t.id}
-          onPick={onPick}
-        />
-      ))}
+      <Forest trees={trees} selected={selected} onPick={onPick} />
       <Stars
         radius={70}
         depth={35}
@@ -156,56 +148,66 @@ function CameraFlight({ tree, reduced, homeRequest }: { tree?: Tree; reduced: bo
     maxPolarAngle={Math.PI * 0.49} enableDamping={false} autoRotate={!reduced && !tree && !manual && !flying}
     autoRotateSpeed={0.18} onStart={() => { flight.current = null; setFlying(false); setManual(true); }} />;
 }
-function TreeObject({
-  tree,
-  selected,
-  onPick,
-  reduced,
-}: {
-  tree: Tree;
-  selected: boolean;
-  onPick: (t: Tree) => void;
-  reduced: boolean;
-}) {
-  const group = useRef<THREE.Group>(null);
-  useFrame(({ clock }) => {
-    if (!reduced && group.current)
-      group.current.position.y =
-        -0.12 + Math.sin(clock.elapsedTime * 1.2 + tree.x) * 0.025;
-  });
-  const color = new THREE.Color(`hsl(${tree.hue},82%,63%)`);
-  return (
-    <group
-      ref={group}
-      position={[tree.x, 0, tree.z]}
-      onClick={(e) => {
-        e.stopPropagation();
-        onPick(tree);
-      }}
-    >
-      <mesh position={[0, tree.height / 2, 0]} castShadow>
-        <cylinderGeometry args={[0.035, 0.08, tree.height, 7]} />
-        <meshStandardMaterial color="#9b7550" />
+function Forest({ trees, selected, onPick }: { trees: Tree[]; selected: string | null; onPick: (tree: Tree) => void }) {
+  const [simple, setSimple] = useState(false);
+  // Buckets and instance lookup are rebuilt together, never indexed into the input array.
+  const buckets = useMemo(() => [0, 1, 2].map(species => trees.filter(t => {
+    let hash = 0;
+    for (const char of t.id) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+    return hash % 3 === species;
+  })), [trees]);
+  const focus = trees.find(t => t.id === selected);
+  return <group name="forest">
+    {buckets.map((items, species) => <BotanicalBatch key={species} items={items} species={species} simple={simple} onPick={onPick} />)}
+    {focus && <group name="selection-marker" position={[focus.x, 0.08, focus.z]}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} renderOrder={10}>
+        <ringGeometry args={[0.32, 0.38, 4]} />
+        <meshBasicMaterial color="white" depthTest={false} side={THREE.DoubleSide} />
       </mesh>
-      <mesh position={[0, tree.height * 0.92, 0]}>
-        <sphereGeometry args={[tree.height * 0.29, 9, 8]} />
-        <meshStandardMaterial
-          color={selected ? "#e9ffe6" : color}
-          emissive={color}
-          emissiveIntensity={selected ? 2.6 : 0.8}
-          roughness={0.5}
-        />
+      <mesh position={[0, focus.height * 1.4 + 0.3, 0]}>
+        <coneGeometry args={[0.12, 0.24, 4]} />
+        <meshBasicMaterial color="white" depthTest={false} />
       </mesh>
-      <mesh position={[0, tree.height * 0.92, 0]}>
-        <sphereGeometry args={[tree.height * 0.38, 8, 7]} />
-        <meshBasicMaterial
-          color={color}
-          transparent
-          opacity={selected ? 0.19 : 0.055}
-        />
-      </mesh>
-    </group>
-  );
+    </group>}
+    <ForestQuality simple={simple} toggle={() => setSimple(v => !v)} />
+  </group>;
+}
+function ForestQuality({ simple, toggle }: { simple: boolean; toggle: () => void }) {
+  return <Html position={[0, 0, 0]} fullscreen style={{ pointerEvents: "none" }}><button style={{ pointerEvents: "auto", position: "absolute", right: 16, bottom: 48 }} onClick={toggle}>Forest: {simple ? "simple" : "detailed"}</button></Html>;
+}
+function BotanicalBatch({ items, species, simple, onPick }: { items: Tree[]; species: number; simple: boolean; onPick: (tree: Tree) => void }) {
+  const trunks = useRef<THREE.InstancedMesh>(null);
+  const crowns = useRef<THREE.InstancedMesh>(null);
+  useEffect(() => {
+    const dummy = new THREE.Object3D();
+    items.forEach((tree, index) => {
+      dummy.position.set(tree.x, tree.height / 2, tree.z);
+      dummy.scale.set(1, tree.height, 1); dummy.updateMatrix();
+      trunks.current!.setMatrixAt(index, dummy.matrix);
+      dummy.position.y = tree.height * 0.92;
+      dummy.scale.set(tree.height * 0.32, tree.height * (species === 1 ? 0.65 : species === 2 ? 0.22 : 0.32), tree.height * 0.32);
+      dummy.updateMatrix(); crowns.current!.setMatrixAt(index, dummy.matrix);
+      crowns.current!.setColorAt(index, new THREE.Color(`hsl(${tree.hue},82%,63%)`));
+    });
+    for (const mesh of [trunks.current!, crowns.current!]) {
+      mesh.instanceMatrix.needsUpdate = true;
+      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+      mesh.computeBoundingSphere();
+    }
+  }, [items, simple]);
+  const pick = (event: import("@react-three/fiber").ThreeEvent<MouseEvent>) => {
+    const tree = items[event.instanceId ?? -1];
+    if (tree) { event.stopPropagation(); onPick(tree); }
+  };
+  return <group>
+    <instancedMesh ref={trunks} args={[undefined, undefined, items.length]} onClick={pick} userData={{ eventIds: items.map(t => t.id) }}>
+      <cylinderGeometry args={[0.035, 0.08, 1, 5]} /><meshStandardMaterial color="#9b7550" />
+    </instancedMesh>
+    <instancedMesh ref={crowns} args={[undefined, undefined, items.length]} onClick={pick} userData={{ eventIds: items.map(t => t.id), species }}>
+      {species === 1 ? <coneGeometry args={[1, 2, simple ? 4 : 8]} /> : species === 2 ? <sphereGeometry args={[1, simple ? 4 : 8, 4]} /> : <icosahedronGeometry args={[1, simple ? 0 : 1]} />}
+      <meshStandardMaterial emissive="#194838" emissiveIntensity={0.4} roughness={0.7} flatShading />
+    </instancedMesh>
+  </group>;
 }
 export default function App() {
   const allDemo = useMemo(() => makeDemoEvents(), []);

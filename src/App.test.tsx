@@ -14,6 +14,7 @@ vi.mock("@react-three/fiber", async (importOriginal) => ({
   Canvas: () => null,
 }));
 vi.mock("@react-three/drei", () => ({
+  Html: () => null,
   Line: () => null,
   Stars: vi.fn(() => null),
   OrbitControls: vi.fn(() => null),
@@ -68,8 +69,8 @@ it("freezes actual tree frame updates and disables camera damping and stars", as
   (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
   const renderer = await create(<Island {...props} reduced={false} />);
   await renderer.advanceFrames(2, 0.1);
-  const tree = renderer.scene.findByType("Group").instance;
-  expect(tree.position.y).not.toBe(0);
+  const tree = renderer.scene.findByProps({ name: "forest" }).instance;
+  expect(tree.position.y).toBe(0);
   await renderer.update(<Island {...props} reduced />);
   const frozen = tree.position.y;
   await renderer.advanceFrames(4, 0.5);
