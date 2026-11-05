@@ -44,6 +44,11 @@ for(const count of [360,1000]) {
  const activeA=await snapshot(); await page.waitForTimeout(400); const activeB=await snapshot();
  assert.notDeepEqual(activeA.camera, activeB.camera); assert.deepEqual(activeA.trees, activeB.trees); assert.notEqual(activeA.star,activeB.star);
  results.push({count,mode:'motion',...await sample()});
+ await page.getByLabel('Inspect commit').selectOption({index:1}); await page.waitForTimeout(1100);
+ assert(await page.getByLabel('Inspect commit').inputValue());
+ assert(await page.evaluate(()=>!!window.profileState().scene.getObjectByName('selection-marker')));
+ results.push({count,mode:'selected',...await sample()});
+ await page.getByRole('button',{name:'Home',exact:true}).click(); await page.waitForTimeout(1100);
  // Drag orbit, change live OS preference while dragging, release; no inertia or automatic updates afterward.
  const box=await page.locator('canvas').boundingBox();
  await page.mouse.move(box.x+box.width*.5,box.y+box.height*.5); await page.mouse.down();

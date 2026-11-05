@@ -23,6 +23,7 @@ afterEach(() => {
   cleanup();
   vi.useRealTimers();
   localStorage?.clear();
+  vi.unstubAllGlobals();
 });
 it("follows system motion changes, allows override and keeps replay usable", () => {
   vi.useFakeTimers();
@@ -78,4 +79,21 @@ it("freezes actual tree frame updates and disables camera damping and stars", as
   expect(Stars).toHaveBeenLastCalledWith(expect.objectContaining({ speed: 0 }), undefined);
   expect(OrbitControls).toHaveBeenLastCalledWith(expect.objectContaining({ autoRotate: false, enableDamping: false }), undefined);
   await renderer.unmount();
+});
+
+it("selects canonical commits with arrow keys after rewind and input reordering", async () => {
+  const { makeDemoEvents, replay } = await import("./domain");
+  const events = makeDemoEvents(12).reverse();
+  vi.stubGlobal("localStorage", { getItem: () => JSON.stringify(events), setItem: vi.fn(), clear: vi.fn() });
+  window.matchMedia = vi.fn().mockReturnValue({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() });
+  render(<App />);
+  const select = screen.getByLabelText("Inspect commit") as HTMLSelectElement;
+  fireEvent.keyDown(select, { key: "End" });
+  expect(select.value).toBe(replay(events, 12).at(-1)!.id);
+  fireEvent.change(screen.getByLabelText("Timeline"), { target: { value: "3" } });
+  expect(select.value).toBe("");
+  fireEvent.keyDown(select, { key: "ArrowDown" });
+  expect(select.value).toBe(replay(events, 3)[0].id);
+  fireEvent.click(screen.getByRole("button", { name: "Forest: detailed" }));
+  expect(screen.getByRole("button", { name: "Forest: simple" }).getAttribute("aria-pressed")).toBe("true");
 });

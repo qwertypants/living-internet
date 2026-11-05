@@ -1,5 +1,5 @@
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Html, Line, OrbitControls, Stars } from "@react-three/drei";
+import { Line, OrbitControls, Stars } from "@react-three/drei";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import {
@@ -25,12 +25,14 @@ export function Island({
   onPick,
   reduced,
   homeRequest = 0,
+  simpleForest = false,
 }: {
   trees: Tree[];
   selected: string | null;
   onPick: (t: Tree) => void;
   reduced: boolean;
   homeRequest?: number;
+  simpleForest?: boolean;
 }) {
   const land = useMemo(() => {
     const g = new THREE.CylinderGeometry(5.6, 6, 0.55, 128, 20);
@@ -99,7 +101,7 @@ export function Island({
           opacity={0.26}
         />
       ))}
-      <Forest trees={trees} selected={selected} onPick={onPick} />
+      <Forest trees={trees} selected={selected} onPick={onPick} simple={simpleForest} />
       <Stars
         radius={70}
         depth={35}
@@ -148,8 +150,7 @@ function CameraFlight({ tree, reduced, homeRequest }: { tree?: Tree; reduced: bo
     maxPolarAngle={Math.PI * 0.49} enableDamping={false} autoRotate={!reduced && !tree && !manual && !flying}
     autoRotateSpeed={0.18} onStart={() => { flight.current = null; setFlying(false); setManual(true); }} />;
 }
-function Forest({ trees, selected, onPick }: { trees: Tree[]; selected: string | null; onPick: (tree: Tree) => void }) {
-  const [simple, setSimple] = useState(false);
+function Forest({ trees, selected, onPick, simple }: { trees: Tree[]; selected: string | null; onPick: (tree: Tree) => void; simple: boolean }) {
   // Buckets and instance lookup are rebuilt together, never indexed into the input array.
   const buckets = useMemo(() => [0, 1, 2].map(species => trees.filter(t => {
     let hash = 0;
@@ -169,11 +170,7 @@ function Forest({ trees, selected, onPick }: { trees: Tree[]; selected: string |
         <meshBasicMaterial color="white" depthTest={false} />
       </mesh>
     </group>}
-    <ForestQuality simple={simple} toggle={() => setSimple(v => !v)} />
   </group>;
-}
-function ForestQuality({ simple, toggle }: { simple: boolean; toggle: () => void }) {
-  return <Html position={[0, 0, 0]} fullscreen style={{ pointerEvents: "none" }}><button style={{ pointerEvents: "auto", position: "absolute", right: 16, bottom: 48 }} onClick={toggle}>Forest: {simple ? "simple" : "detailed"}</button></Html>;
 }
 function BotanicalBatch({ items, species, simple, onPick }: { items: Tree[]; species: number; simple: boolean; onPick: (tree: Tree) => void }) {
   const trunks = useRef<THREE.InstancedMesh>(null);
@@ -226,6 +223,7 @@ export default function App() {
     null,
   );
   const [homeRequest, setHomeRequest] = useState(0);
+  const [simpleForest, setSimpleForest] = useState(false);
   const [error, setError] = useState("");
   const [muted, setMuted] = useState(true);
   const [systemReduced, setSystemReduced] = useState(
@@ -327,6 +325,7 @@ export default function App() {
           <color attach="background" args={["#081411"]} />
           <Island
             homeRequest={homeRequest}
+            simpleForest={simpleForest}
             reduced={reduced}
             trees={trees}
             selected={selected}
@@ -336,10 +335,17 @@ export default function App() {
         <div className="scene-vignette" />
         <div className="scene-controls">
           <button onClick={() => { setSelected(null); setHomeRequest(n => n + 1); }}>Home</button>
-          <label>Inspect commit <select aria-label="Inspect commit" value={selected || ""} onChange={e => setSelected(e.target.value || null)}>
+          <label>Inspect commit <select aria-label="Inspect commit" value={selected || ""} onChange={e => setSelected(e.target.value || null)} onKeyDown={event => {
+            const control = event.currentTarget;
+            const next = event.key === "ArrowDown" ? Math.min(control.options.length - 1, control.selectedIndex + 1)
+              : event.key === "ArrowUp" ? Math.max(0, control.selectedIndex - 1)
+              : event.key === "Home" ? 0 : event.key === "End" ? control.options.length - 1 : null;
+            if (next !== null) { event.preventDefault(); setSelected(control.options[next].value || null); }
+          }}>
             <option value="">Overview</option>
             {trees.map(t => <option key={t.id} value={t.id}>{t.payload.sha.slice(0, 8)} — {t.payload.subject}</option>)}
           </select></label>
+          <button aria-pressed={simpleForest} onClick={() => setSimpleForest(value => !value)}>Forest: {simpleForest ? "simple" : "detailed"}</button>
         </div>
         <div className="eyebrow">
           <span className="pulse" /> SYSTEMS GROWING{" "}
