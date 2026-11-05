@@ -1,4 +1,4 @@
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Line, OrbitControls, Stars } from "@react-three/drei";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
@@ -115,18 +115,40 @@ export function Island({
         fade
         speed={reduced ? 0 : 0.3}
       />
-      <OrbitControls
-        enablePan={false}
-        minDistance={7}
-        maxDistance={16}
-        maxPolarAngle={Math.PI * 0.49}
-        enableDamping={!reduced}
-        autoRotate={!reduced}
-        autoRotateSpeed={0.18}
-      />
+      <CameraFlight tree={trees.find(t => t.id === selected)} reduced={reduced} />
       <fog attach="fog" args={["#081411", 14, 31]} />
     </>
   );
+}
+function CameraFlight({ tree, reduced }: { tree?: Tree; reduced: boolean }) {
+  const camera = useThree(s => s.camera);
+  const controls = useRef<import("three-stdlib").OrbitControls>(null);
+  const flight = useRef<{ from: THREE.Vector3; target: THREE.Vector3; to: THREE.Vector3; look: THREE.Vector3; elapsed: number } | null>(null);
+  const [manual, setManual] = useState(false);
+  useEffect(() => {
+    const c = controls.current;
+    if (!c) return;
+    setManual(false);
+    const look = tree ? new THREE.Vector3(tree.x, tree.height * 0.6, tree.z) : new THREE.Vector3();
+    const to = tree ? look.clone().add(new THREE.Vector3(3, 2.8, 4)) : new THREE.Vector3(8, 8, 12);
+    flight.current = { from: camera.position.clone(), target: c.target.clone(), to, look, elapsed: 0 };
+    if (reduced) {
+      camera.position.copy(to); c.target.copy(look); c.update(); flight.current = null;
+    }
+  }, [tree?.id, reduced, camera]);
+  useFrame((_, delta) => {
+    const f = flight.current, c = controls.current;
+    if (!f || !c) return;
+    f.elapsed += delta;
+    const t = Math.min(1, f.elapsed / 0.9), eased = t * t * (3 - 2 * t);
+    camera.position.lerpVectors(f.from, f.to, eased);
+    c.target.lerpVectors(f.target, f.look, eased);
+    c.update();
+    if (t === 1) flight.current = null;
+  });
+  return <OrbitControls ref={controls} makeDefault enablePan={false} minDistance={2} maxDistance={20}
+    maxPolarAngle={Math.PI * 0.49} enableDamping={false} autoRotate={!reduced && !tree && !manual && !flight.current}
+    autoRotateSpeed={0.18} onStart={() => { flight.current = null; setManual(true); }} />;
 }
 function TreeObject({
   tree,
@@ -193,7 +215,7 @@ export default function App() {
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState(1);
   const [selected, setSelected] = useState<string | null>(
-    events.at(-1)?.id || null,
+    null,
   );
   const [error, setError] = useState("");
   const [muted, setMuted] = useState(true);
@@ -211,6 +233,9 @@ export default function App() {
   }, []);
   const trees = useMemo(() => replay(events, cursor), [events, cursor]);
   const selectedTree = trees.find((t) => t.id === selected);
+  useEffect(() => {
+    if (selected && !selectedTree) setSelected(null);
+  }, [selected, selectedTree]);
   const source =
     events[0]?.source === "synthetic" ? "DEMO SIMULATION" : "LOCAL REPOSITORY";
   useEffect(() => {
@@ -299,6 +324,13 @@ export default function App() {
           />
         </Canvas>
         <div className="scene-vignette" />
+        <div style={{ position: "absolute", bottom: 60, left: 24, zIndex: 3, display: "flex", flexWrap: "wrap", maxWidth: "calc(100% - 48px)", gap: 8 }}>
+          <button onClick={() => setSelected(null)}>Home</button>
+          <label>Inspect commit <select style={{ maxWidth: "180px" }} aria-label="Inspect commit" value={selected || ""} onChange={e => setSelected(e.target.value || null)}>
+            <option value="">Overview</option>
+            {trees.map(t => <option key={t.id} value={t.id}>{t.payload.sha.slice(0, 8)} — {t.payload.subject}</option>)}
+          </select></label>
+        </div>
         <div className="eyebrow">
           <span className="pulse" /> SYSTEMS GROWING{" "}
           <span className="dot">·</span> {cursor.toString().padStart(3, "0")} /{" "}
