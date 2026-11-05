@@ -61,15 +61,15 @@ Execution authorized. Unfinished work remains unchecked. See plan.md for design 
 **Description:** Replace per-tree mesh duplication with a bounded set of shared botanical forms and stable instance selection.
 
 **Acceptance criteria:**
-- [ ] At least three decorative silhouettes are seeded by stable event IDs without changing existing positions.
-- [ ] Click and keyboard selection resolve to the correct event after rewind, fast-forward and input reordering.
-- [ ] Record draw calls and frame timings against Task 1 at identical settings; retain a simpler forest quality option.
+- [x] At least three decorative silhouettes are seeded by stable event IDs without changing existing positions.
+- [x] Click and keyboard selection resolve to the correct event after rewind, fast-forward and input reordering.
+- [x] Record draw calls and frame timings against Task 1 at identical settings; retain a simpler forest quality option.
 
 **Verification:**
-- [ ] `npm test` passes, including relevant behavior tests.
-- [ ] `npm run build` passes.
-- [ ] Manual check: Inspect overlapping trees and forest edges at both dataset sizes; compare performance and verify selected SHA after rewind.
-- [ ] Record actual results and limits in `docs/PROGRESS.md`.
+- [x] `npm test` passes, including relevant behavior tests.
+- [x] `npm run build` passes.
+- [x] Manual check: Inspect overlapping trees and forest edges at both dataset sizes; compare performance and verify selected SHA after rewind.
+- [x] Record actual results and limits in `docs/PROGRESS.md`.
 
 **Dependencies:** 2
 
