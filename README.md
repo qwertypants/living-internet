@@ -27,3 +27,7 @@ Export user-selected metadata with `node scripts/export-git-history.mjs --invent
 Only development serves the fixed `local/history.json` endpoint, to loopback same-origin requests. There is no arbitrary path parameter. Static private paths are denied and no history is bundled. Imported events persist in this browser's localStorage; clear site data to remove them. Subjects are not imported; branch membership and ancestry are unknown, and parents are metadata only. Repository labels remain private. Coverage describes the inventory: protected Desktop/Downloads locations and unknown historical email aliases may omit activity.
 
 Real-history browser checks: `node scripts/history-check.mjs` (installed Chrome, Playwright package under `/tmp/mycelium-browser-evidence`, dev port 5187). Screenshots go to `/tmp`.
+
+## GitHub Pages
+
+The main branch publishes through `.github/workflows/pages.yml` after tests pass. `npm run build:pages` builds assets for `/living-internet/`. The public site starts with synthetic demo events; private history remains local and can be imported in the browser using the JSON file control.

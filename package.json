@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "test": "vitest run && node --test scripts/export-git-history.checks.mjs",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build:pages": "tsc -b && vite build --base=/living-internet/"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.6",
