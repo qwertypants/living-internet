@@ -7,15 +7,15 @@ Execution authorized. Unfinished work remains unchecked. See plan.md for design 
 **Description:** Make reduced motion apply to the actual 3D scene and establish a reproducible performance baseline.
 
 **Acceptance criteria:**
-- [ ] System preference and the existing override control camera rotation, stars, tree movement and future transitions.
-- [ ] Historical navigation and playback remain usable with reduced motion; decorative motion is disabled.
-- [ ] Record device, browser, viewport, pixel ratio, draw calls and frame timing for 360 and 1,000 synthetic events, including any failed case.
+- [x] System preference and the existing override control camera rotation, stars, tree movement and future transitions.
+- [x] Historical navigation and playback remain usable with reduced motion; decorative motion is disabled.
+- [x] Record device, browser, viewport, pixel ratio, draw calls and frame timing for 360 and 1,000 synthetic events, including any failed case.
 
 **Verification:**
-- [ ] `npm test` passes, including relevant behavior tests.
-- [ ] `npm run build` passes.
-- [ ] Manual check: Toggle motion while orbiting and replaying; confirm no automatic scene movement and record baseline measurements.
-- [ ] Record actual results and limits in `docs/PROGRESS.md`.
+- [x] `npm test` passes, including relevant behavior tests.
+- [x] `npm run build` passes.
+- [x] Manual check: Toggle motion while orbiting and replaying; confirm no automatic scene movement and record baseline measurements.
+- [x] Record actual results and limits in `docs/PROGRESS.md`.
 
 **Dependencies:** None
 
@@ -146,19 +146,19 @@ Execution authorized. Unfinished work remains unchecked. See plan.md for design 
 
 ## Task 6: Load real Git history
 
-**Description:** Provide a bounded local metadata exporter using the Git executable and a validated JSON import path in the browser. Read only a repository explicitly selected by the user. Support packed histories without a native desktop rewrite.
+**Description:** Provide a bounded local metadata exporter using the Git executable and a validated JSON import path in the browser. The user authorized all their commits across every local repository. Inventory source repositories without writing to them; import only matching authored commits. Support packed histories without a native desktop rewrite.
 
 **Acceptance criteria:**
-- [ ] Export at most 1,000 commits from selected HEAD using argument arrays, no shell interpolation, no repository writes; capture full SHA, timestamp and parent IDs. Subjects are excluded by default and opt-in only. Do not export source, diffs, authors, email, remote URLs or absolute paths.
+- [ ] Export all commits authored by configured user Git identities across all refs in discovered local repositories; process history in bounded batches without silently truncating. Discover under /Users/wilkins/Sites first and deduplicate linked worktrees using their Git common directory. Report aliases, unreadable repositories and uncovered roots as limitations. Read identities locally for filtering but never export personal identifiers. Use Git using argument arrays, no shell interpolation, no repository writes; capture full SHA, timestamp and parent IDs. Subjects are excluded by default and opt-in only. Do not export source, diffs, authors, email, remote URLs or absolute paths.
 - [ ] Browser validates the versioned JSON envelope before replacing its events; deterministic identity, replay and provenance work with real metadata, and malformed input leaves existing data intact. Do not imply a branch membership or parent relationship unsupported by exported metadata.
-- [ ] Read and load the user-selected real repository once available; keep actual metadata in ignored local files and browser storage, never commits. Verify sampled SHAs/counts against read-only Git output and record actual limits.
+- [ ] Read and load the discovered real repositories; keep actual metadata in ignored local files and browser storage, never commits. Verify sampled SHAs/counts against read-only Git output and record actual limits.
 
 **Verification:**
 - [ ] Tests exercise a temporary repository with packed commits, repeat exports, malformed imports and export bounds.
 - [ ] `npm test` and `npm run build` pass.
 - [ ] Real-history loading and selection verified, with privacy and packed-history limits recorded in docs/PROGRESS.md.
 
-**Dependencies:** 5; user-selected source repository.
+**Dependencies:** 5; repository inventory and configured author identities.
 
 **Files likely touched:** scripts/export-git-history.mjs, src/domain.ts, src/App.tsx, tests and README.md; isolate CLI and UI integration if the slice grows.
 

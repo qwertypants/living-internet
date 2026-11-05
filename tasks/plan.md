@@ -30,7 +30,7 @@ Make the existing browser prototype feel like a place you can explore. The first
 - Preserve readable provenance and a lightweight scene option. Do not rely on glow or color alone for selection.
 
 ## Ordered task list
-- [ ] Task 1: Make the scene motion-safe and record a performance baseline.
+- [x] Task 1: Make the scene motion-safe and record a performance baseline.
 - [ ] Task 2: Add a cancellable camera descent to selected commits.
 - [ ] Checkpoint A: navigation and motion preferences work together.
 - [ ] Task 3: Render a varied, instanced forest with stable picking.
