@@ -149,13 +149,13 @@ Execution authorized. Unfinished work remains unchecked. See plan.md for design 
 **Description:** Build a read-only Git metadata exporter for all user-authorized repositories, then run it on the existing private inventory.
 
 **Acceptance criteria:**
-- [ ] Read all reachable commits from all refs, exact author-email matching against the union of configured user.email identities; process metadata as a bounded stream/batches, not a silently capped recent sample. Support packed history, deduplicate Git common directories and per-project SHAs, report failed sources. No imported repo writes, no shell interpolation or Git fetch.
-- [ ] Emit schemaVersion 1 JSON with projects [{id,label}], commits [{projectId,sha,parents,occurredAt}], coverage {repositoryCount,matchingRepositoryCount,commitCount,unreadableRepositoryCount}. Project IDs are opaque stable hashes of resolved Git common directories; labels are repository basenames only. SHA/parent IDs are full hashes, timestamps ISO UTC. Do not emit subjects, authors/emails, remote URLs, absolute paths, source or diffs. Configured identities stay process-local.
-- [ ] Run on the ignored inventory, write actual output only to ignored local/history.json in the implementation checkout with private permissions, verify counts and sampled commits against read-only Git. Keep actual data out of commits, public assets and dist.
+- [x] Read all reachable commits from all refs, exact author-email matching against the union of configured user.email identities; process metadata as a bounded stream/batches, not a silently capped recent sample. Support packed history, deduplicate Git common directories and per-project SHAs, report failed sources. No imported repo writes, no shell interpolation or Git fetch.
+- [x] Emit schemaVersion 1 JSON with projects [{id,label}], commits [{projectId,sha,parents,occurredAt}], coverage {repositoryCount,matchingRepositoryCount,commitCount,unreadableRepositoryCount}. Project IDs are opaque stable hashes of resolved Git common directories; labels are repository basenames only. SHA/parent IDs are full hashes, timestamps ISO UTC. Do not emit subjects, authors/emails, remote URLs, absolute paths, source or diffs. Configured identities stay process-local.
+- [x] Run on the ignored inventory, write actual output only to ignored local/history.json in the implementation checkout with private permissions, verify counts and sampled commits against read-only Git. Keep actual data out of commits, public assets and dist.
 
 **Verification:**
-- [ ] Temporary Git fixtures cover packed objects, multiple refs, exact author filtering, repeated export stability, duplicate worktrees and no history cutoff.
-- [ ] npm test and npm run build pass; record actual aggregate coverage and limits in docs/PROGRESS.md without private names or paths.
+- [x] Temporary Git fixtures cover packed objects, multiple refs, exact author filtering, repeated export stability, duplicate worktrees and no history cutoff.
+- [x] npm test and npm run build pass; record actual aggregate coverage and limits in docs/PROGRESS.md without private names or paths.
 
 **Dependencies:** 5.
 **Files likely touched:** scripts/export-git-history.mjs, scripts/export-git-history.test.ts, docs/history-format.md, .gitignore, docs/PROGRESS.md.
