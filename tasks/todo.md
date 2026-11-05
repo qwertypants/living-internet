@@ -87,15 +87,15 @@ Execution authorized. Unfinished work remains unchecked. See plan.md for design 
 **Description:** Make playback reveal new trees with restrained growth and one decorative pulse, using a bounded animation state separate from event projection.
 
 **Acceptance criteria:**
-- [ ] Newly revealed trees grow from their fixed anchors; replay speed does not change final shape, position or event identity.
-- [ ] Pause freezes growth; manual scrub settles immediately; replay from the beginning repeats the same final scene.
-- [ ] Reduced motion renders settled shapes, and animation state is bounded to active transitions rather than accumulated history.
+- [x] Newly revealed trees grow from their fixed anchors; replay speed does not change final shape, position or event identity.
+- [x] Pause freezes growth; manual scrub settles immediately; replay from the beginning repeats the same final scene.
+- [x] Reduced motion renders settled shapes, and animation state is bounded to active transitions rather than accumulated history.
 
 **Verification:**
-- [ ] `npm test` passes, including relevant behavior tests.
-- [ ] `npm run build` passes.
-- [ ] Manual check: Replay at each speed, pause mid-growth, scrub backward and forward, and compare selected event and final forest with direct projection.
-- [ ] Record actual results and limits in `docs/PROGRESS.md`.
+- [x] `npm test` passes, including relevant behavior tests.
+- [x] `npm run build` passes.
+- [x] Manual check: Replay at each speed, pause mid-growth, scrub backward and forward, and compare selected event and final forest with direct projection.
+- [x] Record actual results and limits in `docs/PROGRESS.md`.
 
 **Dependencies:** 3
 

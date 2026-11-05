@@ -34,7 +34,7 @@ Make the existing browser prototype feel like a place you can explore. The first
 - [x] Task 2: Add a cancellable camera descent to selected commits.
 - [ ] Checkpoint A: navigation and motion preferences work together.
 - [x] Task 3: Render a varied, instanced forest with stable picking.
-- [ ] Task 4: Choreograph growth during event replay.
+- [x] Task 4: Choreograph growth during event replay.
 - [ ] Checkpoint B: dense forest, selection, and history remain correct.
 - [ ] Task 5: Sculpt the floating island and add bounded atmosphere.
 - [ ] Checkpoint C: visual review, measured performance, tests and build.
